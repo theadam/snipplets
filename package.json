@@ -2,7 +2,7 @@
   "name": "snipplets",
   "version": "0.0.1",
   "description": "Add small runnable / editable js snippets in the middle of a static HTML document",
-  "main": "lib/index.js",
+  "main": "src/index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/theadam/snipplets.git"
