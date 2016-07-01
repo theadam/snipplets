@@ -70,9 +70,13 @@ function snipplet(area, compiler, responder) {
     .map(x => x.trim())
     .filter(Boolean);
 
+  const container = document.createElement('div');
+  container.className = 'container';
+  area.parentNode.insertBefore(container, area.nextSibling);
+
   const div = document.createElement('div');
-  div.className = 'container';
-  area.parentNode.insertBefore(div, area.nextSibling);
+  div.className = 'snipplet-container';
+  container.appendChild(div);
 
   const mirror = CodeMirror(div, {
     value: text,
@@ -81,9 +85,6 @@ function snipplet(area, compiler, responder) {
     tabSize: 2,
     lineNumbers: true,
     viewportMargin: Infinity,
-  });
-  mirror.on('scroll', (...args) => {
-    console.log(mirror.getScrollInfo());
   });
 
   const iframe = createIframe(deps.concat(responder.deps));

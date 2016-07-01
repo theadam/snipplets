@@ -4,6 +4,28 @@
   height: 140px;
 }
 
+.snipplet-container {
+  position: relative;
+  box-shadow: 0;
+  transition: box-shadow 1s;
+}
+
+.snipplet-container:hover {
+  box-shadow: 0px 0px 5px #AAA;
+}
+
+.snipplet-container::after {
+  content: "Edit Me";
+  position: absolute;
+  font-size: 0.8em;
+  padding: 4px 6px;
+  top: 0px;
+  right: 0px;
+  border-bottom: 1px solid #eee;
+  border-left: 1px solid #eee;
+  z-index: 99;
+}
+
 iframe.result {
   margin: 0px;
   border: none;
