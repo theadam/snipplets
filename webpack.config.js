@@ -21,14 +21,12 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 module.exports = {
-  devtool: 'eval-source-map',
   entry: [
     './src/index'
   ],
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
-    publicPath: '/dist'
   },
   module: {
     loaders: [
