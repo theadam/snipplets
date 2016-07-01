@@ -87,7 +87,7 @@ function snipplet(area, compiler, responder) {
     viewportMargin: Infinity,
   });
 
-  const iframe = createIframe(deps.concat(responder.deps));
+  const iframe = createIframe(deps.concat(responder.deps).concat(compiler.deps));
   div.appendChild(iframe);
 
   const error = document.createElement('pre');
@@ -104,7 +104,7 @@ function snipplet(area, compiler, responder) {
     }
   };
 
-  compiler(text).then(compiled => {
+  compiler.compiler(text).then(compiled => {
     setError(undefined);
     const postCode = code => {
       iframe.contentWindow.postMessage({
@@ -117,7 +117,7 @@ function snipplet(area, compiler, responder) {
     iframe.onload = () => postCode(compiled);
 
     mirror.on('change', () =>
-      compiler(mirror.getValue())
+      compiler.compiler(mirror.getValue())
         .then(postCode)
         .catch(setError)
     );

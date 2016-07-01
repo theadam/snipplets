@@ -28,7 +28,7 @@ export function compEval(code, comp = wrapCompiler(defaultCompiler)) {
 
 function getCompiler(script, id) {
   if (script.trim().length === 0) throw new Error(`Compiler cannot be empty (compiler id '${id}')`);
-  return compEval(`(${script})`).catch(e => {
+  return compEval(`${script}`).catch(e => {
     throw Object.create(e, { message: {
       value: `Could not compile snipplet compiler with id '${id}': ${e.message}`,
     } });
@@ -39,7 +39,7 @@ function getCompiler(script, id) {
         'Make sure your compiler is just one function.'
       );
     }
-    return { id, fn: wrapCompiler(compilerFn, id) };
+    return wrapCompiler(compilerFn, id);
   });
 }
 
@@ -48,15 +48,26 @@ const { map } = Array.prototype;
 export default function compilers() {
   return Promise.resolve().then(() =>
     Promise.all(document.querySelectorAll('textarea.snipplet-compiler')::map(script => {
+      const deps = (script.getAttribute('data-deps') || '')
+        .split(',')
+        .map(x => x.trim())
+        .filter(Boolean);
+
       const id = script.id;
       if (!id) throw new Error("Snipplet compilers must have an 'id' attribute set");
-      return getCompiler(script.innerText, id);
+      return getCompiler(script.innerText, id).then(compiler => ({
+        id,
+        data: {
+          compiler,
+          deps,
+        },
+      }));
     }))
   )
-  .then(cList => cList.reduce((acc, { id, fn }) => ({ ...acc, [id]: fn }), {}))
+  .then(cList => cList.reduce((acc, { id, data }) => ({ ...acc, [id]: data }), {}))
   .then(comps => {
     if (comps.default !== undefined) return comps;
-    return { ...comps, default: wrapCompiler(defaultCompiler) };
+    return { ...comps, default: { compiler: wrapCompiler(defaultCompiler), deps: [] } };
   });
 }
 

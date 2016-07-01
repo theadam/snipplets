@@ -3,7 +3,10 @@
     <title>Snipplet Tutorial</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="https://bootswatch.com/yeti/bootstrap.min.css"></link>
+    <script type="text/javascript" src="http://cdn.opalrb.org/opal/current/opal.min.js"></script>
+    <script type="text/javascript" src="http://cdn.opalrb.org/opal/current/opal-parser.min.js"></script>
     <script src="../dist/snipplets.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.16.0/mode/ruby/ruby.min.js"></script>
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
@@ -24,6 +27,14 @@
       })
     </textarea>
 
+    <textarea class="snipplet-compiler" id="ruby" data-deps="http://cdn.opalrb.org/opal/current/opal.min.js">
+      Opal.load('opal-parser');
+
+      (function(code) {
+        return Opal.compile(code);
+      })
+    </textarea>
+
     <textarea class="markdown">
 # Making Snipplets is easy!
 
@@ -31,7 +42,7 @@ This is a simple snipplet:
 ```html
 <textarea class="snipplet">
 
-1 + 1
+[1, 2, 3, 4].map(x => x + 1);
 
 &lt;/textarea>
 
@@ -44,7 +55,7 @@ Add That to a simple HTML file that pulls in the snipplet js file, and the follo
 
     <textarea class="snipplet">
 
-1 + 1
+[1, 2, 3, 4].map(x => x + 1);
 
     </textarea>
 
@@ -96,5 +107,20 @@ function Test({ text }) {
 
 <Test text="Why Hello There!"/>
 </textarea>
+
+
+    <textarea class="markdown">
+# Adding a compiler
+
+New compilers are also easy to add
+
+    </textarea>
+
+    <textarea class="snipplet" data-compiler-id="ruby" data-mode="ruby">
+[1, 2, 3, 4].map do
+  |x| x + 1
+end
+    </textarea>
+
   </body>
 </html>

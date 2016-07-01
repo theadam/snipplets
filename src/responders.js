@@ -1,13 +1,13 @@
 function defaultResponder(data, container) {
   const pre = document.createElement('pre');
-  pre.innerText = data === undefined ? '' : JSON.stringify(data.result, 2, 2);
+  pre.innerText = data === undefined ? '' : JSON.stringify(data.result);
   // eslint-disable-next-line no-param-reassign
   container.innerHTML = '';
   container.appendChild(pre);
 }
 
 function responder(text, id, compiler) {
-  return compiler(text)
+  return compiler.compiler(text)
   .catch(e => {
     throw Object.create(e, { message: {
       value: `Could not compile snipplet responder with id '${id}': ${e.message}`,
