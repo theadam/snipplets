@@ -1,19 +1,7 @@
 .CodeMirror {
   width: 100%;
-  height: auto;
-  min-height: 100px;
-  max-height: 600px;
   border: 1px solid #eee;
-}
-
-.CodeMirror-scroll {
-  height: auto;
-  min-height: 100px;
-  max-height: 600px;
-}
-
-.navbar {
-  z-index: 100 !important;
+  height: 140px;
 }
 
 iframe.result {
@@ -41,6 +29,8 @@ body {
 }
 
 .snipplet-error {
+  margin: 0;
+  border: none;
   color: white;
   font-weight: bold;
   background-color: #DD0000;
@@ -55,7 +45,7 @@ body {
   z-index: 1000;
 }
 
-textarea.snipplet, textarea.snipplet-compiler, textarea.markdown {
+textarea.snipplet, textarea.snipplet-compiler, textarea.markdown, textarea.snipplet-responder {
   display: none;
 }
 
@@ -72,7 +62,7 @@ img {
 }
 
 .navbar {
-  z-index: 1;
+  z-index: 100;
 }
 
 .table {

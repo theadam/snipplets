@@ -1,21 +1,16 @@
 import CodeMirror from 'codemirror';
+global.CodeMirror = CodeMirror;
 
 const { map } = Array.prototype;
 
-function defaultOnResult(data, container) {
-  const pre = document.createElement('pre');
-  pre.innerText = data === undefined ? '' : JSON.stringify(data.result, 2, 2);
-  // eslint-disable-next-line no-param-reassign
-  container.innerHTML = '';
-  container.appendChild(pre);
-}
-
-function createIframe() {
+function createIframe(deps) {
+  const scripts = deps.map(dep => `<script src=${dep}>${'<'}/script>`).join('\n');
   const iframe = document.createElement('iframe');
   iframe.className = 'result';
   iframe.src = `data:text/html;charset=utf-8,
   <html>
     <head>
+      ${scripts}
       <style>
         body {
           margin: 0px;
@@ -38,21 +33,27 @@ function createIframe() {
       <div id="result"></div>
       <script>
         var container = document.getElementById('result');
+
         window.addEventListener('message', function(event) {
           var data = event.data;
           if (data.type === 'run') {
             try {
-              var responder = eval('(' + event.data.responder + ');');
+              var responder = eval(event.data.responder);
               if (!(responder instanceof Function)) {
                throw new Error('Snipplet responders must be a single function\n' +
                  event.data.responder);
               }
               var result = eval(data.code);
-              if (result === 'use strict') return responder(undefined, container);
-              responder({ result: result }, container);
-              parent.postMessage({ success: container.clientHeight }, event.origin);
+              if (result === 'use strict') {
+                responder(undefined, container);
+              } else {
+                responder({ result: result }, container);
+              }
+              parent.postMessage({ success: true }, event.origin);
+              parent.postMessage({ resize: container.clientHeight }, event.origin);
             } catch (e) {
-              parent.postMessage({ error: e }, event.origin);
+              console.log(e);
+              parent.postMessage({ error: e.toString() }, event.origin);
             }
           }
         });
@@ -62,21 +63,30 @@ function createIframe() {
   return iframe;
 }
 
-function snipplet(area, compiler) {
+function snipplet(area, compiler, responder) {
   const text = area.textContent.trim();
+  const deps = (area.getAttribute('data-deps') || '')
+    .split(',')
+    .map(x => x.trim())
+    .filter(Boolean);
 
   const div = document.createElement('div');
   div.className = 'container';
   area.parentNode.insertBefore(div, area.nextSibling);
+
   const mirror = CodeMirror(div, {
     value: text,
-    mode: area.getAttribute('data-lang') || 'javascript',
+    mode: area.getAttribute('data-mode') || 'jsx',
     theme: area.getAttribute('data-theme') || 'default',
+    tabSize: 2,
     lineNumbers: true,
     viewportMargin: Infinity,
   });
+  mirror.on('scroll', (...args) => {
+    console.log(mirror.getScrollInfo());
+  });
 
-  const iframe = createIframe();
+  const iframe = createIframe(deps.concat(responder.deps));
   div.appendChild(iframe);
 
   const error = document.createElement('pre');
@@ -99,7 +109,7 @@ function snipplet(area, compiler) {
       iframe.contentWindow.postMessage({
         type: 'run',
         code,
-        responder: defaultOnResult.toString(),
+        responder: responder.source,
       }, '*');
     };
 
@@ -119,23 +129,34 @@ function snipplet(area, compiler) {
       }
       if (event.data.success) {
         setError(undefined);
-        iframe.style.height = event.data.success;
+      }
+      if (event.data.resize) {
+        iframe.style.height = Math.min(event.data.resize + 2, 400);
       }
     });
   }).catch(setError);
 }
 
-export default function snipplets(compilers) {
+export default function snipplets(compilers, responders) {
   return Promise.resolve().then(() =>
     document.querySelectorAll('textarea.snipplet')::map(snippletArea => {
       const compilerId = snippletArea.getAttribute('data-compiler-id') || 'default';
       const compiler = compilers[compilerId];
       if (!compiler) {
         throw new Error(
-          `There is no snipplet compiler defined for compiler id '${compilerId}'
-        `);
+          `There is no snipplet compiler defined for compiler id '${compilerId}'`
+        );
       }
-      return snipplet(snippletArea, compiler);
+
+      const responderId = snippletArea.getAttribute('data-responder-id') || 'default';
+      const responder = responders[responderId];
+      if (!responder) {
+        throw new Error(
+          `There is no snipplet responder defined for responder id '${responderId}'`
+        );
+      }
+
+      return snipplet(snippletArea, compiler, responder);
     })
   );
 }

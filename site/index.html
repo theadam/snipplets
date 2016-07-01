@@ -1,9 +1,9 @@
 <html>
   <head>
     <title>Snipplet Tutorial</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="https://bootswatch.com/yeti/bootstrap.min.css"></link>
     <script src="../dist/snipplets.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   </head>
   <body>
     <div class="navbar navbar-default navbar-fixed-top">
@@ -16,13 +16,23 @@
       </div>
     </div>
 
+    <textarea class="snipplet-responder" data-deps="https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react.js,https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js," id="react">
+      (function(result, el) {
+        if (result === undefined) el.innerHTML = '';
+        el.style.padding = '10px';
+        ReactDOM.render(result.result, el);
+      })
+    </textarea>
+
     <textarea class="markdown">
 # Making Snipplets is easy!
 
 This is a simple snipplet:
 ```html
 <textarea class="snipplet">
+
 1 + 1
+
 &lt;/textarea>
 
 ```
@@ -33,8 +43,58 @@ Add That to a simple HTML file that pulls in the snipplet js file, and the follo
     </textarea>
 
     <textarea class="snipplet">
+
 1 + 1
+
     </textarea>
 
+    <textarea class="markdown">
+# Adding a responder
+
+A responder is a text area with a class of `snipplet-responder`.  Responders can change how evaluated values are evaluated.  It is a simple function that takes 2 arguments.  The evaluated result of the snipplet, and an element that you can use to display the result.
+
+Responders can also have a comma separated list of dependencies.  Here is a simple react responder.  The function is surrounded by parenthesis to make it an expression.
+
+```html
+    <textarea
+      class="snipplet-responder"
+      data-deps="
+        https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react.js,
+        https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js
+      "
+      id="react">
+
+      (function(result, el) {
+        if (result === undefined) el.innerHTML = '';
+        el.style.padding = '10px';
+        ReactDOM.render(result.result, el);
+      })
+
+    &lt;/textarea>
+```
+To use a responder just give your snipplet a `data-responder-id` attribute.
+```html
+<textarea class="snipplet" data-responder-id="react">
+
+function Test({ text }) {
+  return <div onClick={() => alert(text)}>Greetings</div>
+};
+
+<Test text="Why Hello There!"/>
+
+&lt;/textarea>
+```
+
+Here is the snipplet above in action!
+    </textarea>
+
+<textarea class="snipplet" data-responder-id="react">
+
+function Test({ text }) {
+  return <div onClick={() => alert(text)}>Greetings!</div>
+}
+
+<Test text="Why Hello There!"/>
+</textarea>
   </body>
 </html>

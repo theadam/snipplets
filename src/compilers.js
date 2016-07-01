@@ -22,12 +22,8 @@ function wrapCompiler(comp, id) {
   );
 }
 
-function removeStrict(code) {
-  return code.replace('"use strict";', '');
-}
-
 export function compEval(code, comp = wrapCompiler(defaultCompiler)) {
-  return comp(code).then(compiled => (0, eval)(`${removeStrict(compiled)}`));
+  return comp(code).then(compiled => (0, eval)(`${compiled}`));
 }
 
 function getCompiler(script, id) {
