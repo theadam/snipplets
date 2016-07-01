@@ -43,7 +43,6 @@ function createIframe() {
           if (data.type === 'run') {
             try {
               var responder = eval('(' + event.data.responder + ');');
-              console.log(event.data.responder);
               if (!(responder instanceof Function)) {
                throw new Error('Snipplet responders must be a single function\n' +
                  event.data.responder);
@@ -53,7 +52,6 @@ function createIframe() {
               responder({ result: result }, container);
               parent.postMessage({ success: container.clientHeight }, event.origin);
             } catch (e) {
-              console.log(e);
               parent.postMessage({ error: e }, event.origin);
             }
           }
