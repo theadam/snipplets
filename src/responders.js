@@ -1,6 +1,8 @@
-function defaultResponder(data, container) {
+import { getDeps } from './utils';
+
+function defaultResponder(getData, container, code) {
   const pre = document.createElement('pre');
-  pre.innerText = data === undefined ? '' : JSON.stringify(data.result);
+  pre.innerText = !code ? '' : JSON.stringify(getData());
   // eslint-disable-next-line no-param-reassign
   container.innerHTML = '';
   container.appendChild(pre);
@@ -21,10 +23,7 @@ export default function responders(compilers) {
     Promise.all(document.querySelectorAll('textarea.snipplet-responder')::map(responderEl => {
       const id = responderEl.id;
       if (!id) throw new Error("Snipplet responders must have an 'id' attribute set");
-      const deps = (responderEl.getAttribute('data-deps') || '')
-        .split(',')
-        .map(x => x.trim())
-        .filter(Boolean);
+      const deps = getDeps(responderEl);
 
       return responder(responderEl.innerText, id, compilers.default).then(source => ({
         id,

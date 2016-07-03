@@ -1,6 +1,8 @@
 import CodeMirror from 'codemirror';
 global.CodeMirror = CodeMirror;
 
+import { getDeps, debounce } from './utils';
+
 const { map } = Array.prototype;
 
 function createIframe(deps) {
@@ -33,28 +35,30 @@ function createIframe(deps) {
       <div id="result"></div>
       <script>
         var container = document.getElementById('result');
+        var responder;
 
         window.addEventListener('message', function(event) {
           var data = event.data;
           if (data.type === 'run') {
-            try {
-              var responder = eval(event.data.responder);
+            Promise.resolve().then(function() {
               if (!(responder instanceof Function)) {
-               throw new Error('Snipplet responders must be a single function\n' +
-                 event.data.responder);
+                var responder = eval(event.data.responder);
+                if (!(responder instanceof Function)) {
+                  throw new Error('Snipplet responders must be a single function\n' +
+                    event.data.responder);
+                }
               }
-              var result = eval(data.code);
-              if (result === 'use strict') {
-                responder(undefined, container);
-              } else {
-                responder({ result: result }, container);
+              function getResult() {
+                return eval(data.code);
               }
-              parent.postMessage({ success: true }, event.origin);
-              parent.postMessage({ resize: container.clientHeight }, event.origin);
-            } catch (e) {
+              return Promise.resolve(responder(getResult, container, data.code)).then(function() {
+                parent.postMessage({ success: true }, event.origin);
+                parent.postMessage({ resize: container.clientHeight }, event.origin);
+              });
+            }).catch(function(e) {
               console.log(e);
               parent.postMessage({ error: e.toString() }, event.origin);
-            }
+            });
           }
         });
       ${'<'}/script>
@@ -65,10 +69,7 @@ function createIframe(deps) {
 
 function snipplet(area, compiler, responder) {
   const text = area.textContent.trim();
-  const deps = (area.getAttribute('data-deps') || '')
-    .split(',')
-    .map(x => x.trim())
-    .filter(Boolean);
+  const deps = getDeps(area);
 
   const container = document.createElement('div');
   container.className = 'container';
@@ -116,11 +117,11 @@ function snipplet(area, compiler, responder) {
 
     iframe.onload = () => postCode(compiled);
 
-    mirror.on('change', () =>
+    mirror.on('change', debounce(300, () =>
       compiler.compiler(mirror.getValue())
         .then(postCode)
         .catch(setError)
-    );
+    ));
 
     window.addEventListener('message', event => {
       if (event.source.frames !== iframe.contentWindow) return;

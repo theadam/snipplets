@@ -1,28 +1,21 @@
 import * as Babel from 'babel-standalone';
 global.Babel = Babel;
 
+import { getDeps } from './utils';
+
 function defaultCompiler(code) {
   return Babel.transform(code, { presets: ['es2015', 'stage-0', 'react'] }).code;
 }
 
-function wrapCompiler(comp, id) {
-  if (comp.length === 1) {
-    return (code) => Promise.resolve().then(() => comp(code));
-  } else if (comp.length === 2) {
-    return code =>
-      new Promise((res, rej) => {
-        comp(code, (err, data) => {
-          if (err) return rej(err);
-          return res(data);
-        });
-      });
-  }
-  throw new Error(
-    `Snipplet compiler functions must accept either one or two arguments (compiler id '${id}')`
-  );
+function toCompiler() {
+  const comp = this;
+  return function compiler(code) {
+    const result = code.trim().length === 0 ? undefined : comp(code);
+    return Promise.resolve(result);
+  };
 }
 
-export function compEval(code, comp = wrapCompiler(defaultCompiler)) {
+function compEval(code, comp = defaultCompiler::toCompiler()) {
   return comp(code).then(compiled => (0, eval)(`${compiled}`));
 }
 
@@ -39,7 +32,7 @@ function getCompiler(script, id) {
         'Make sure your compiler is just one function.'
       );
     }
-    return wrapCompiler(compilerFn, id);
+    return compilerFn::toCompiler();
   });
 }
 
@@ -48,10 +41,7 @@ const { map } = Array.prototype;
 export default function compilers() {
   return Promise.resolve().then(() =>
     Promise.all(document.querySelectorAll('textarea.snipplet-compiler')::map(script => {
-      const deps = (script.getAttribute('data-deps') || '')
-        .split(',')
-        .map(x => x.trim())
-        .filter(Boolean);
+      const deps = getDeps(script);
 
       const id = script.id;
       if (!id) throw new Error("Snipplet compilers must have an 'id' attribute set");
@@ -67,7 +57,7 @@ export default function compilers() {
   .then(cList => cList.reduce((acc, { id, data }) => ({ ...acc, [id]: data }), {}))
   .then(comps => {
     if (comps.default !== undefined) return comps;
-    return { ...comps, default: { compiler: wrapCompiler(defaultCompiler), deps: [] } };
+    return { ...comps, default: { compiler: defaultCompiler::toCompiler(), deps: [] } };
   });
 }
 
