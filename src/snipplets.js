@@ -51,6 +51,7 @@ function iframecontent(deps) {
   <html>
     <head>
       <base href="${window.location.href}">
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/es6-promise/3.2.2/es6-promise.min.js"></script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css">
       ${scripts}
       <style>

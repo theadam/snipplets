@@ -1,3 +1,4 @@
+require('es6-promise').polyfill();
 import 'codemirror/lib/codemirror.css';
 import './snipplet.css';
 import 'codemirror/mode/javascript/javascript';
