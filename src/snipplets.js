@@ -12,6 +12,7 @@ function createIframe(deps) {
   iframe.src = `data:text/html;charset=utf-8,
   <html>
     <head>
+      <base href="${window.location.href}">
       ${scripts}
       <style>
         body {
