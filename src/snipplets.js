@@ -5,14 +5,53 @@ import { getDeps, debounce } from './utils';
 
 const { map } = Array.prototype;
 
-function createIframe(deps) {
+function iframebody() {
+  return `
+    <div id="result"></div>
+    <script>
+      var container = document.getElementById('result');
+      var responder;
+
+      window.addEventListener('message', function(event) {
+        var data = event.data;
+        if (!container.onresize) {
+          container.onresize = function() {
+            parent.postMessage({ resize: container.clientHeight }, event.origin);
+          }
+        }
+        if (data.type === 'run') {
+          Promise.resolve().then(function() {
+            if (!(responder instanceof Function)) {
+              var responder = eval(event.data.responder);
+              if (!(responder instanceof Function)) {
+                throw new Error('Snipplet responders must be a single function\\n' +
+                  event.data.responder);
+              }
+            }
+            function getResult() {
+              return eval(data.code);
+            }
+            return Promise.resolve(responder(getResult, container, data.code)).then(function() {
+              parent.postMessage({ success: true }, event.origin);
+              parent.postMessage({ resize: container.clientHeight }, event.origin);
+            });
+          }).catch(function(e) {
+            console.log(e);
+            parent.postMessage({ error: e.toString() }, event.origin);
+          });
+        }
+      });
+    ${'<'}/script>
+  `;
+}
+
+function iframecontent(deps) {
   const scripts = deps.map(dep => `<script src=${dep}>${'<'}/script>`).join('\n');
-  const iframe = document.createElement('iframe');
-  iframe.className = 'result';
-  iframe.src = `data:text/html;charset=utf-8,
+  return `
   <html>
     <head>
       <base href="${window.location.href}">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css">
       ${scripts}
       <style>
         body {
@@ -32,44 +71,13 @@ function createIframe(deps) {
         }
       </style>
     </head>
-    <body>
-      <div id="result"></div>
-      <script>
-        var container = document.getElementById('result');
-        var responder;
-
-        window.addEventListener('message', function(event) {
-          var data = event.data;
-          if (!container.onresize) {
-            container.onresize = function() {
-              parent.postMessage({ resize: container.clientHeight }, event.origin);
-            }
-          }
-          if (data.type === 'run') {
-            Promise.resolve().then(function() {
-              if (!(responder instanceof Function)) {
-                var responder = eval(event.data.responder);
-                if (!(responder instanceof Function)) {
-                  throw new Error('Snipplet responders must be a single function\n' +
-                    event.data.responder);
-                }
-              }
-              function getResult() {
-                return eval(data.code);
-              }
-              return Promise.resolve(responder(getResult, container, data.code)).then(function() {
-                parent.postMessage({ success: true }, event.origin);
-                parent.postMessage({ resize: container.clientHeight }, event.origin);
-              });
-            }).catch(function(e) {
-              console.log(e);
-              parent.postMessage({ error: e.toString() }, event.origin);
-            });
-          }
-        });
-      ${'<'}/script>
-    </body>
+    <body>${iframebody()}</body>
   </html>`;
+}
+
+function createIframe() {
+  const iframe = document.createElement('iframe');
+  iframe.className = 'result';
   return iframe;
 }
 
@@ -94,8 +102,12 @@ function snipplet(area, compiler, responder) {
     viewportMargin: Infinity,
   });
 
-  const iframe = createIframe(deps.concat(responder.deps).concat(compiler.deps));
+  const content = iframecontent(deps.concat(responder.deps).concat(compiler.deps));
+  const iframe = createIframe();
   div.appendChild(iframe);
+  iframe.contentWindow.content = content;
+  // eslint-disable-next-line no-script-url
+  iframe.src = 'javascript:window["content"]';
 
   const error = document.createElement('pre');
   error.className = 'snipplet-editor-error';
