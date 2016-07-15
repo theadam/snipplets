@@ -39,6 +39,11 @@ function createIframe(deps) {
 
         window.addEventListener('message', function(event) {
           var data = event.data;
+          if (!window.onresize) {
+            window.onresize = function() {
+              parent.postMessage({ resize: container.clientHeight }, event.origin);
+            }
+          }
           if (data.type === 'run') {
             Promise.resolve().then(function() {
               if (!(responder instanceof Function)) {
