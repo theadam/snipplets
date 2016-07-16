@@ -4,7 +4,7 @@ global.Babel = Babel;
 import { getDeps } from './utils';
 
 function defaultCompiler(code) {
-  return Babel.transform(code, { presets: ['es2015', 'stage-0', 'react'] }).code;
+  return Babel.transform(code, { presets: ['es2015', 'stage-0', 'react'], filename: 'snipplet' }).code;
 }
 
 function toCompiler() {
