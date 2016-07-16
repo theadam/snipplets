@@ -10,8 +10,9 @@ function defaultCompiler(code) {
 function toCompiler() {
   const comp = this;
   return function compiler(code) {
-    const result = code.trim().length === 0 ? undefined : comp(code);
-    return Promise.resolve(result);
+    return Promise.resolve().then(() =>
+      (code.trim().length === 0 ? undefined : comp(code))
+    );
   };
 }
 

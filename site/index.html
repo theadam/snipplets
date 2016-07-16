@@ -22,7 +22,6 @@
 
     <textarea class="snipplet-responder" data-deps="https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react.js,https://cdnjs.cloudflare.com/ajax/libs/react/15.1.0/react-dom.js," id="react">
       (function(getResult, el, code) {
-        if (!code) return el.innerHTML = '';
         el.style.padding = '10px';
         ReactDOM.render(getResult(), el);
       })
